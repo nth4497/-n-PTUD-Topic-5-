@@ -1,4 +1,3 @@
-
 package topic5_gui_nhan_file;
 
 import java.awt.BorderLayout;
@@ -8,6 +7,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -43,17 +43,18 @@ public class Server extends JFrame implements ActionListener{
 	JLabel lblTitle;
 	JButton btnBrowser ;
 	JButton btnGui;
-	JTextField txtfilelocation,txtPort;
+	JTextField txtfilelocation,txtPort,txtdiachiip;
 	JSplitPane split;
 	JFileChooser browser= new JFileChooser() ;
 	public static ServerSocket serverSocket=null;
-	
+	public static Socket socket=null;
+	public static DatagramSocket datagramSocket;
 	public Server() throws IOException{
 		super ("SERVER");
 		split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-		setSize(800,300);
+		setSize(460,200);
 		JPanel pNorth = new JPanel();
-		pNorth.add(lblTitle= new JLabel ("Transfer File Between Computers"));
+		pNorth.add(lblTitle= new JLabel ("Gửi file giữa hai máy tính"));
 		Font fp= new Font ("Time new Roman",Font.BOLD,30);
 		lblTitle.setFont(fp);
 		lblTitle.setForeground(Color.blue);
@@ -66,33 +67,39 @@ public class Server extends JFrame implements ActionListener{
 		pWest.add(btnGui = new JButton ("Gửi File"));
 		pWest.add(Box.createVerticalStrut(5));
 		add(pWest,BorderLayout.WEST);
-		btnGui.addActionListener(this);
+	
 		
 		JPanel p1;
 		 p1 = new JPanel();
 		 
 		 JPanel pCen = new JPanel();
+		 Box linebox =new Box(BoxLayout.X_AXIS);
 		 Box b = Box.createVerticalBox();
 		 b.setBorder(BorderFactory.createLineBorder(Color.red));
-		 JLabel ip= new JLabel(); 
+		// JLabel ip= new JLabel(); 
 		 p1.add(btnBrowser = new JButton ("Chọn File"));
 		 p1.add(txtfilelocation = new JTextField(20));
 		 p1.add(Box.createVerticalStrut(5));	
 		 
-		 btnBrowser.addActionListener(this);
-		 
+		
 		 JLabel port= new JLabel();
-		 p1.add( port= new JLabel("Port Server:"));
+		 p1.add( port= new JLabel("Port máy chủ"));
 		 p1.add(txtPort = new JTextField(20));
+		 
+		 JLabel ip= new JLabel();
+		 p1.add( ip= new JLabel("Dia  chi IP:"));
+		 p1.add(txtdiachiip = new JTextField(20));
 		
 		
 		 b.add(p1);
-		 b.add(Box.createVerticalStrut(5));
+		 b.add(Box.createVerticalBox());
+	//	 b.add(Box.createVerticalStrut(5));
 		 split.setLeftComponent(pWest);
 		 split.setRightComponent(b);
 		 add(split,BorderLayout.CENTER);
- 
 		 
+		 btnGui.addActionListener(this);
+		  btnBrowser.addActionListener(this);
 		 	
 }
 
@@ -104,23 +111,26 @@ public class Server extends JFrame implements ActionListener{
 		String fileLocation;
 		int portNo = 0;
 		String portNo2;
-		
+		String diachiip ;
 		Socket socket = null;
 		FileInputStream fileInputStream = null;
 		BufferedInputStream bufferedInputStream = null;
-
 		OutputStream outputStream = null;
+		
 		fileLocation = txtfilelocation.getText();
+		diachiip = txtdiachiip.getText();
 		portNo2=String.valueOf(portNo);
 		if(obj.equals(btnGui)){
 			
-			if(fileLocation.equals("")&& portNo2.equals(""))
-			JOptionPane.showMessageDialog(this, "Ban chua nhap lieu");
+			if(fileLocation.equals("")||portNo2.equals(""))
+			JOptionPane.showMessageDialog(this, "Bạn chưa nhập liệu");
 		else
 			try{
 					fileLocation = txtfilelocation.getText();
 					portNo=Integer.parseInt(txtPort.getText());
+					diachiip=txtdiachiip.getText();
 					serverSocket=new ServerSocket(portNo);
+					//socket =new Socket(diachiip, portNo);
 					JOptionPane.showMessageDialog(this, "Đợi client kết nối để gửi file");
 				//System.out.println("Waiting for receiver...");
 							socket = serverSocket.accept();
@@ -138,12 +148,15 @@ public class Server extends JFrame implements ActionListener{
 							//sending file through socket
 							outputStream = socket.getOutputStream();
 							//System.out.println("Sending " + fileLocation + "( size: " + byteArray.length + " bytes)");
+							DataOutputStream out=new DataOutputStream(outputStream);
+							out.writeUTF(fileLocation);
 							outputStream.write(byteArray,0,byteArray.length);			//copying byteArray to socket
 							outputStream.flush();										//flushing socket
 							//System.out.println("Done.");								//file has been sent
-						}
+							//System.exit(0);
+					}
 			catch(Exception ex){
-				JOptionPane.showMessageDialog(this, "Nhap sai dia chi");
+				JOptionPane.showMessageDialog(this, "ket noi lai");
 				txtfilelocation.selectAll();
 				txtfilelocation.requestFocus();
 				txtPort.selectAll();
